@@ -22,7 +22,8 @@ class DataLoader:
 
         # set cutoff between train and validation data
         cutoff = math.floor((2/3)*X.shape[0])
-        
+
+        # set train and validation data
         self.train = {
             'data': X[:cutoff],
             'label': y[:cutoff]
@@ -44,6 +45,7 @@ class DataLoader:
                     images_path='t10k-images-idx3-ubyte', 
                     labels_path='t10k-labels-idx1-ubyte')
 
+        # set test data
         self.test = {
             'data': X,
             'label': y
