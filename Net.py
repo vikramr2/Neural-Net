@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.linalg as la
 from numpy.random import rand
 from Linear import *
 from Functions import *
@@ -15,7 +16,8 @@ class Net:
             nxt = self.layer_sizes[n+1]
             
             self.layers.append(Linear(cur, nxt))
-            self.layers.append(ReLU(nxt) if n != len(self.layer_sizes)-2 else Softmax(nxt))
+            self.layers.append(ReLU(nxt))
+        #self.layers.append(Softmax(nxt))
 
         print(" Done")
 
@@ -23,14 +25,16 @@ class Net:
         x = inputs
         for layer in self.layers:
             x = layer(x)
-
+            x = (x - np.mean(x))/np.std(x)
         self.out = x
         return x
 
     def xent(self, y):
+        print(self.out[y])
         return -np.log(self.out[y])
 
     def backward(self, y):
+        upstreams = []
         grad = np.zeros(len(self.out))
         
         for k in range(len(self.out)):
@@ -39,9 +43,12 @@ class Net:
 
         for n in range(len(self.layers) - 2, -1, -1):
             if isinstance(self.layers[n], Linear):
-                grad = self.layers[n].backward(grad)[1]
+                streams = self.layers[n].backward(grad)
+                
+                upstreams.append(streams[0])
+                grad = streams[1]
             else:
                 grad = self.layers[n].backward(grad)
 
-        return grad
+        return (grad, upstreams)
         
