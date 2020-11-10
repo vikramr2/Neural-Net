@@ -1,37 +1,47 @@
 import numpy as np
 from numpy.random import rand
+from Linear import *
+from Functions import *
 
 class Net:
-    def __init__(self, num_inputs, num_outputs):
-        self.inputs = num_inputs
-        self.outputs = num_outputs
-        self.middle_layers = []
-        self.biases = []
-        self.weights = []
+    def __init__(self, layer_sizes):
+        self.layer_sizes = layer_sizes
+        self.layers = []
 
-    def add_layer(self, num_nodes):
-        self.middle_layers.append(num_nodes)
+        print("Initializing weights...", end='')
 
-    def initialize(self):
-        print("Initializing weights and biases...", end='')
-
-        # reset biases and weights
-        self.biases = []
-        self.weights = []
-
-        # append all middle layers
-        for i in range(len(self.middle_layers)):
-            curr = self.middle_layers[i]
-            prev = self.inputs if i == 0 else self.middle_layers[i-1]
+        for n in range(len(self.layer_sizes)-1):
+            cur = self.layer_sizes[n]
+            nxt = self.layer_sizes[n+1]
             
-            self.biases.append(np.zeros(curr))
-            self.weights.append(rand(prev, curr))
-
-        # append final layers
-        self.weights.append(rand((self.inputs if len(self.middle_layers) == 0
-                                     else self.middle_layers[-1]), self.outputs))
-        self.biases.append(np.zeros(self.outputs))
+            self.layers.append(Linear(cur, nxt))
+            self.layers.append(ReLU(nxt) if n != len(self.layer_sizes)-2 else Softmax(nxt))
 
         print(" Done")
 
+    def __call__(self, inputs):
+        x = inputs
+        for layer in self.layers:
+            x = layer(x)
+
+        self.out = x
+        return x
+
+    def xent(self, y):
+        return -np.log(self.out[y])
+
+    def backward(self, y):
+        grad = np.zeros(len(self.out))
+        
+        for k in range(len(self.out)):
+            kronecker = 1 if y == k else 0
+            grad[k] = -(kronecker - self.out[y])
+
+        for n in range(len(self.layers) - 2, -1, -1):
+            if isinstance(self.layers[n], Linear):
+                grad = self.layers[n].backward(grad)[1]
+            else:
+                grad = self.layers[n].backward(grad)
+
+        return grad
         
