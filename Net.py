@@ -16,8 +16,8 @@ class Net:
             nxt = self.layer_sizes[n+1]
             
             self.layers.append(Linear(cur, nxt))
-            self.layers.append(ReLU(nxt))
-        #self.layers.append(Softmax(nxt))
+            #self.layers.append(ReLU(nxt))
+        self.layers.append(Softmax(nxt))
 
         print(" Done")
 
@@ -25,12 +25,12 @@ class Net:
         x = inputs
         for layer in self.layers:
             x = layer(x)
-            x = (x - np.mean(x))/np.std(x)
+            if not isinstance(layer, Softmax):
+                x = (x - np.mean(x))/np.std(x)
         self.out = x
         return x
 
     def xent(self, y):
-        print(self.out[y])
         return -np.log(self.out[y])
 
     def backward(self, y):
