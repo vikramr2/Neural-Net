@@ -26,4 +26,16 @@ class Softmax:
         exps = np.exp(x)
         x = exps / np.sum(exps)
 
+        self.out = x
         return x
+        
+    def backward(self, grad):
+        n = len(self.out)
+        J = np.zeros((n, n))
+        
+        for i in range(n):
+            for j in range(n):
+                kronecker = 1 if i == j else 0
+                J[i][j] = self.out[i]*(kronecker - self.out[j])
+                
+        return J @ grad

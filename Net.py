@@ -37,11 +37,11 @@ class Net:
         upstreams = []
         grad = np.zeros(len(self.out))
         
-        for k in range(len(self.out)):
-            kronecker = 1 if y == k else 0
-            grad[k] = -(kronecker - self.out[y])
+        for i in range(len(grad)):
+            kronecker = 1 if y == i else 0
+            grad[i] = self.out[i] - kronecker
 
-        for n in range(len(self.layers) - 2, -1, -1):
+        for n in range(len(self.layers) - 1, -1, -1):
             if isinstance(self.layers[n], Linear):
                 streams = self.layers[n].backward(grad)
                 
