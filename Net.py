@@ -10,6 +10,7 @@ from numpy.random import rand
 from math import floor
 from Linear import *
 from Functions import *
+from BatchNorm import *
 
 class Net:
     def __init__(self, layer_sizes):
@@ -26,6 +27,8 @@ class Net:
             
             if n == len(self.layer_sizes) - 2:
                 self.layers.append(ReLU(nxt))
+            
+            self.layers.append(BatchNorm(nxt))
         self.layers.append(Softmax(nxt))
 
         print(" Done")
@@ -34,8 +37,8 @@ class Net:
         x = inputs
         for layer in self.layers:
             x = layer(x)
-            if not isinstance(layer, Softmax):
-                x = (x - x.mean(axis=1)[:, None])/x.std(axis=1)[:, None]
+            #if not isinstance(layer, Softmax):
+                #x = (x - x.mean(axis=1)[:, None])/x.std(axis=1)[:, None]
         self.out = x
         return x
 
@@ -52,6 +55,8 @@ class Net:
 
     def backward(self, y):
         upstreams = []
+        dgammas = []
+        dbetas = []
         grad = np.zeros(self.out.shape)
             
         for i in range(len(y)):
@@ -65,8 +70,14 @@ class Net:
                 
                 upstreams.append(streams[0])
                 grad = streams[1]
+            elif isinstance(self.layers[n], BatchNorm):
+                streams = self.layers[n].backward(grad)
+                
+                dgammas.append(streams[1])
+                dbetas.append(streams[2])
+                grad = streams[0]
             else:
                 grad = self.layers[n].backward(grad)
 
-        return (grad, upstreams)
+        return (grad, upstreams, dgammas, dbetas)
         
