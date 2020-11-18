@@ -13,3 +13,6 @@ class SGD:
 
     def advance(self):
         self.iter += 1
+
+class Adam:
+    
